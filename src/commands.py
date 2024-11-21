@@ -1,5 +1,4 @@
 from telegram import Update
-import requests
 from user_alerts import user_alerts
 
 class Command():
@@ -7,7 +6,7 @@ class Command():
         self.commands_list = {
             "start"    : ["Start bot", self.start],
             "help"     : ["Get help", self.help],
-            "setalert" : ["set alerts use command with <crypto_id> <price> <direction> , direction can be up|down.",self.set_alert]
+            "setalert" : ["set alerts",self.set_alert],
         }
 
     async def start(self,update: Update, context):
@@ -24,17 +23,16 @@ class Command():
         print(f"set_alert command called by {update.effective_user.username} : {update.effective_user.id}")
         chat_id = update.effective_chat.id
         try:
-            crypto_id = context.args[0].lower()
+            coin_id = context.args[0].lower()
             target_price = float(context.args[1])
             direction = context.args[2]
-            user_alerts[chat_id] = {'ids':crypto_id,'price':target_price , 'direction' : direction}
-            print(user_alerts)
+            if coin_id not in user_alerts:
+                user_alerts[coin_id] = []
+            user_alerts[coin_id].append({'ids':coin_id,'price':target_price , 'direction' : direction})
             if direction == 'up':
-                await update.message.reply_text(f'Alert set for {crypto_id} if it exceeds {target_price}')
+                await update.message.reply_text(f'Alert set for {coin_id} if it exceeds {target_price}')
             else:
-                await update.message.reply_text(f'Alert set for {crypto_id} if it drops below {target_price}')
+                await update.message.reply_text(f'Alert set for {coin_id} if it drops below {target_price}')
 
         except(IndexError,ValueError):
             await update.message.reply_text('Usage: /setalert <crypto_id> <price> <direction>')
-
-
