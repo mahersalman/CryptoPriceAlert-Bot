@@ -1,7 +1,6 @@
 import requests
 import asyncio
-from time import sleep
-
+from api_calls import get_crypto_price
 """
 type of alerts : dictionary
     * key : coin_id(according to coingecko)
@@ -9,27 +8,15 @@ type of alerts : dictionary
     (while each dict is = {'chat_id':chat_id,'price':price,'direction':direction})
 """
 user_alerts ={}
-user_alerts['bitcoin'] = [{'chat_id':1234,'price':50000,'direction':'up'}]
  
-API_URL = "https://api.coingecko.com/api/v3/simple/price"
-def get_crypto_price(coin_id,currency ='usd'):
-    try:
-        params = {'ids': coin_id,
-                    'vs_currencies': currency
-                    }
-        response = requests.get(API_URL,params=params)
-        data = response.json()
-        return data[coin_id][currency]
-    except Exception as e:
-        print("Error in get_crypto_price:",e)
-        return 0
+# crypto_id_link - "https://docs.google.com/spreadsheets/d/1wTTuxXt8n9q7C4NDXqQpI3wpKu1_5bGVmP9Xz0XGSyU/edit?gid=0#gid=0"
 
-
-async def check_prices(application):
+async def check_prices(application,currency = 'usd'):
     try:
+        coins_price = get_crypto_price(list(user_alerts.keys()))
         for coin_id,users in user_alerts.items():
-            current_price = get_crypto_price(coin_id)
             for user in users:
+                current_price = coins_price[coin_id][currency]
                 if user['direction'] == 'up' and current_price >= user['price']:
                     await application.bot.send_message(chat_id=user['chat_id'], text=f"🚀 {coin_id} has exceeds ${current_price}!")
                 elif user['direction'] == 'down' and current_price <= user['price']:
@@ -41,8 +28,10 @@ async def check_prices(application):
 async def alerts(application):
     while True:
         await check_prices(application)
-        sleep(20)
+        await asyncio.sleep(60)
 
 
 def thread_run_alert(application):
     asyncio.run(alerts(application)) 
+
+

@@ -21,18 +21,20 @@ class Command():
 
     async def set_alert(self, update: Update , context):
         print(f"set_alert command called by {update.effective_user.username} : {update.effective_user.id}")
-        chat_id = update.effective_chat.id
         try:
+            chat_id = update.effective_chat.id
             coin_id = context.args[0].lower()
             target_price = float(context.args[1])
             direction = context.args[2]
             if coin_id not in user_alerts:
                 user_alerts[coin_id] = []
-            user_alerts[coin_id].append({'ids':coin_id,'price':target_price , 'direction' : direction})
+            user_alerts[coin_id].append({'chat_id':chat_id,'price':target_price , 'direction' : direction})
             if direction == 'up':
-                await update.message.reply_text(f'Alert set for {coin_id} if it exceeds {target_price}')
+                await update.message.reply_text(f'User [{chat_id}] : Alert set for {coin_id} if it exceeds {target_price}')
             else:
-                await update.message.reply_text(f'Alert set for {coin_id} if it drops below {target_price}')
+                await update.message.reply_text(f'User [{chat_id}] : Alert set for {coin_id} if it drops below {target_price}')
 
         except(IndexError,ValueError):
             await update.message.reply_text('Usage: /setalert <crypto_id> <price> <direction>')
+
+        print(user_alerts)
